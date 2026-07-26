@@ -1,0 +1,417 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // NOTE: costs one extra document read per rule evaluation that calls
+    // it. Fine at EMS's scale; if it ever shows up in cost/latency
+    // profiling, mirror `role` into an Auth custom claim via a Cloud
+    // Function (see ARCHITECTURE.md) and read request.auth.token.role instead.
+    function isAdmin() {
+      let requester = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return isSignedIn() && requester.role == 'admin' && requester.status == 'active';
+    }
+
+    function hasRole(uid, role) {
+      let target = get(/databases/$(database)/documents/users/$(uid)).data;
+      return target.role == role && target.status == 'active';
+    }
+
+    function isCourseTeacherOf(courseId) {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/courses/$(courseId)).data.teacherId == request.auth.uid;
+    }
+
+    // Path A of users/{uid} `create` — first admin ever, active immediately.
+    // Paired with the meta/adminBootstrap flip in the same batch.
+    function validAdminBootstrap() {
+      return request.resource.data.role == 'admin'
+        && request.resource.data.status == 'active'
+        && get(/databases/$(database)/documents/meta/adminBootstrap).data.claimed == false
+        && getAfter(/databases/$(database)/documents/meta/adminBootstrap).data.claimed == true;
+    }
+
+    // Path B of users/{uid} `create` — open self-signup. Anyone can create
+    // their own profile as a pending teacher/student request; 'admin' is
+    // only reachable via validAdminBootstrap() above. A pending account is
+    // otherwise powerless — every other rule in this file that matters
+    // gates on status == 'active' via isAdmin()/hasRole(), and the app
+    // itself blocks a pending user from any role area (see ProtectedRoute).
+    function validOpenSignup() {
+      return request.resource.data.status == 'pending'
+        && request.resource.data.role in ['teacher', 'student'];
+    }
+
+    // ---------------------------------------------------------------------
+    // meta/adminBootstrap — seeded manually once via the Firebase Console
+    // ({ claimed: false }), before anyone signs up. Flips to true exactly
+    // once, the moment the first admin account is created. See
+    // users/{uid} `create` below for the paired write.
+    // ---------------------------------------------------------------------
+    match /meta/adminBootstrap {
+      allow get: if true; // /signup reads this while signed out, to decide which form to show
+      allow update: if isSignedIn()
+        && resource.data.claimed == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claimed'])
+        && request.resource.data.claimed == true;
+      allow create, delete: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // users/{uid}
+    // ---------------------------------------------------------------------
+    match /users/{uid} {
+      allow get: if isOwner(uid) || isAdmin() || hasRole(request.auth.uid, 'teacher');
+      allow list: if isAdmin() || hasRole(request.auth.uid, 'teacher'); // admin's directory + pending queue; teacher needs the student directory for grading/attendance/gradebook views
+
+      // A user may only ever create their OWN document, and only via one
+      // of two server-checked paths — the client cannot self-assign a role:
+      allow create: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.groupIds is list
+        && request.resource.data.fcmTokens is list
+        && (validAdminBootstrap() || validOpenSignup());
+
+      // Self-service profile edits. A disabled account can't touch even
+      // its own profile; role/status/uid/email are never owner-editable.
+      // Students specifically can't change their own name (admin manages
+      // it, matching official records) — teachers/admin still can.
+      allow update: if isOwner(uid)
+        && resource.data.status != 'disabled'
+        && (
+          (resource.data.role == 'student'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['locale', 'photoURL', 'fcmTokens', 'telegramChatId', 'telegramLinkCode']))
+          || (resource.data.role != 'student'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'locale', 'photoURL', 'fcmTokens', 'telegramChatId', 'telegramLinkCode']))
+        );
+
+      // Admin approving or rejecting a pending signup: role may be
+      // confirmed/corrected, status moves pending -> active or disabled.
+      allow update: if isAdmin()
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && resource.data.status == 'pending'
+        && request.resource.data.status in ['active', 'disabled']
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'role', 'groupIds']);
+
+      // Admin managing an already-decided account: enable/disable, adjust
+      // group membership, correct the name. Role is locked once approved.
+      allow update: if isAdmin()
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && resource.data.status != 'pending'
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'groupIds', 'name']);
+
+      allow delete: if false; // no hard delete — admin disables instead
+    }
+
+    // ---------------------------------------------------------------------
+    // auditLogs/{id} — create-only, admin read/write. See ARCHITECTURE.md:
+    // this records legitimate admin actions taken through the app; it is
+    // not a defense against direct Firebase Console access, which no
+    // client-side rule can constrain.
+    // ---------------------------------------------------------------------
+    match /auditLogs/{id} {
+      allow get, list: if isAdmin();
+      allow create: if isSignedIn() && request.resource.data.actorId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // semesters/{id}, classrooms/{id} — admin-managed, org-readable.
+    // ---------------------------------------------------------------------
+    match /semesters/{id} {
+      allow get, list: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /classrooms/{id} {
+      allow get, list: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // groups/{id} — admin-managed, org-readable.
+    // ---------------------------------------------------------------------
+    match /groups/{id} {
+      allow get, list: if isSignedIn();
+      allow create, update: if isAdmin()
+        && request.resource.data.teacherIds is list
+        && request.resource.data.memberCount is int;
+      allow delete: if isAdmin() && resource.data.memberCount == 0;
+
+      match /members/{uid} {
+        allow get, list: if isSignedIn();
+        allow write: if isAdmin();
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // courses/{id} — admin creates/assigns; teacher of record manages
+    // their own course's lessons.
+    // ---------------------------------------------------------------------
+    match /courses/{courseId} {
+      allow get, list: if isSignedIn();
+      allow create, update: if isAdmin()
+        && hasRole(request.resource.data.teacherId, 'teacher')
+        && request.resource.data.groupIds is list;
+      allow delete: if isAdmin();
+
+      match /lessons/{lessonId} {
+        allow get, list: if isSignedIn();
+        allow write: if isAdmin() || isCourseTeacherOf(courseId);
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // homework/{id} — the deadline-lock is the core rule the whole spec
+    // calls out: once published, a teacher can never touch dueAt/publishAt
+    // again, and can only move status forward (never reopen a closed
+    // assignment). Only admin can do either — see ARCHITECTURE.md.
+    // ---------------------------------------------------------------------
+    match /homework/{hwId} {
+      allow get, list: if isSignedIn();
+
+      allow create: if (isAdmin() || isCourseTeacherOf(request.resource.data.courseId))
+        && request.resource.data.status == 'draft'
+        && request.resource.data.createdBy == request.auth.uid;
+
+      // While still a draft, nothing is locked yet.
+      allow update: if (isAdmin() || isCourseTeacherOf(resource.data.courseId))
+        && resource.data.status == 'draft';
+
+      // Once published: teacher may edit content and move status forward
+      // (published -> closed -> graded), but dueAt/publishAt are frozen
+      // and a closed assignment can never come back to published (that's
+      // "reopening" — admin-only, see below).
+      allow update: if isCourseTeacherOf(resource.data.courseId)
+        && resource.data.status != 'draft'
+        && request.resource.data.courseId == resource.data.courseId
+        && request.resource.data.dueAt == resource.data.dueAt
+        && request.resource.data.publishAt == resource.data.publishAt
+        && (
+          (resource.data.status == 'published' && request.resource.data.status in ['published', 'closed', 'graded'])
+          || (resource.data.status == 'closed' && request.resource.data.status in ['closed', 'graded'])
+          || (resource.data.status == 'graded' && request.resource.data.status == 'graded')
+        );
+
+      // Admin: full control, including extending/shortening a deadline or
+      // reopening a closed assignment. Trusted role — see the auditLogs
+      // note above for why this isn't further rules-gated.
+      allow update: if isAdmin();
+
+      allow delete: if isAdmin() || (isCourseTeacherOf(resource.data.courseId) && resource.data.status == 'draft');
+
+      match /submissions/{studentId} {
+        function hw() {
+          return get(/databases/$(database)/documents/homework/$(hwId)).data;
+        }
+
+        // Students can't list classmates' submissions (privacy) — the
+        // student-facing UI reads its own submission by direct doc id.
+        allow get: if isOwner(studentId) || isAdmin() || isCourseTeacherOf(hw().courseId);
+        allow list: if isAdmin() || isCourseTeacherOf(hw().courseId);
+
+        allow create: if isOwner(studentId)
+          && hw().status == 'published'
+          && (request.time <= hw().dueAt || hw().allowLate == true)
+          && request.resource.data.score == null
+          && request.resource.data.gradedBy == null;
+
+        // Resubmission before grading, still within the same deadline gate.
+        allow update: if isOwner(studentId)
+          && resource.data.score == null
+          && hw().status == 'published'
+          && (request.time <= hw().dueAt || hw().allowLate == true)
+          && request.resource.data.score == null
+          && request.resource.data.gradedBy == null;
+
+        // Grading touches score/feedback/gradedBy/gradedAt only — never
+        // the student's actual submitted content.
+        allow update: if (isAdmin() || isCourseTeacherOf(hw().courseId))
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['score', 'feedback', 'gradedBy', 'gradedAt']);
+
+        allow delete: if false;
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // questionBank/{id} — each teacher's own reusable question repository.
+    // Admin can see/manage all of it (oversight); a teacher only their own.
+    // ---------------------------------------------------------------------
+    match /questionBank/{id} {
+      allow get, list: if isAdmin() || isOwner(resource.data.ownerId);
+      allow create: if (isAdmin() || hasRole(request.auth.uid, 'teacher'))
+        && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAdmin() || isOwner(resource.data.ownerId);
+    }
+
+    // ---------------------------------------------------------------------
+    // quizzes/{id} — same deadline-lock shape as homework, minus the
+    // 'graded' state (grading happens per-attempt, not per-quiz). The one
+    // rule that actually matters for test integrity: keys/{qid} is never
+    // readable by anyone except the course's teacher or admin — grading
+    // only ever happens in a teacher/admin session, so an answer key
+    // never reaches a student's browser even for "auto-graded" questions.
+    // ---------------------------------------------------------------------
+    match /quizzes/{quizId} {
+      function quizOf() {
+        return get(/databases/$(database)/documents/quizzes/$(quizId)).data;
+      }
+
+      allow get, list: if isSignedIn();
+
+      allow create: if (isAdmin() || isCourseTeacherOf(request.resource.data.courseId))
+        && request.resource.data.status == 'draft'
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if (isAdmin() || isCourseTeacherOf(resource.data.courseId)) && resource.data.status == 'draft';
+
+      allow update: if isCourseTeacherOf(resource.data.courseId)
+        && resource.data.status == 'published'
+        && request.resource.data.courseId == resource.data.courseId
+        && request.resource.data.durationMin == resource.data.durationMin
+        && request.resource.data.dueAt == resource.data.dueAt
+        && request.resource.data.publishAt == resource.data.publishAt
+        && request.resource.data.status in ['published', 'closed'];
+
+      allow update: if isAdmin();
+
+      allow delete: if isAdmin() || (isCourseTeacherOf(resource.data.courseId) && resource.data.status == 'draft');
+
+      match /items/{qid} {
+        allow get, list: if isSignedIn();
+        allow write: if isAdmin() || (isCourseTeacherOf(quizOf().courseId) && quizOf().status == 'draft');
+      }
+
+      match /keys/{qid} {
+        allow get, list: if isAdmin() || isCourseTeacherOf(quizOf().courseId);
+        allow write: if isAdmin() || (isCourseTeacherOf(quizOf().courseId) && quizOf().status == 'draft');
+      }
+
+      match /attempts/{attemptId} {
+        function attemptStudentId() {
+          return attemptId.split('_')[0];
+        }
+
+        allow get: if isOwner(attemptStudentId()) || isAdmin() || isCourseTeacherOf(quizOf().courseId);
+        allow list: if isAdmin() || isCourseTeacherOf(quizOf().courseId);
+
+        allow create: if isOwner(attemptStudentId())
+          && request.resource.data.studentId == attemptStudentId()
+          && quizOf().status == 'published'
+          && request.time <= quizOf().dueAt
+          && request.resource.data.status == 'in_progress'
+          && request.resource.data.score == null;
+
+        // Student saving answers, or submitting (status -> 'submitted').
+        allow update: if isOwner(attemptStudentId())
+          && resource.data.status == 'in_progress'
+          && request.resource.data.studentId == resource.data.studentId
+          && request.resource.data.score == null
+          && request.resource.data.gradedBy == null
+          && request.resource.data.status in ['in_progress', 'submitted'];
+
+        // Grading — score/gradedBy/gradedAt/status only, never the student's answers.
+        allow update: if (isAdmin() || isCourseTeacherOf(quizOf().courseId))
+          && resource.data.status == 'submitted'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['score', 'gradedBy', 'gradedAt', 'status'])
+          && request.resource.data.status == 'graded';
+
+        allow delete: if false;
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // attendance/{id} — one document per (course, session), a map of
+    // studentUid -> status. Broadly readable to any signed-in user, same
+    // trade-off already made for lessons/homework/courses; write is
+    // scoped to the course's teacher or admin.
+    // ---------------------------------------------------------------------
+    match /attendance/{id} {
+      allow get, list: if isSignedIn();
+      allow create, update: if isAdmin() || isCourseTeacherOf(request.resource.data.courseId);
+      allow delete: if isAdmin() || isCourseTeacherOf(resource.data.courseId);
+    }
+
+    // ---------------------------------------------------------------------
+    // manualGrades/{id} — ad-hoc graded items. Unlike attendance, grades
+    // are per-student and more sensitive, so read is scoped to the
+    // student themselves plus admin/course-teacher (same per-document
+    // list-scoping pattern as questionBank).
+    // ---------------------------------------------------------------------
+    match /manualGrades/{id} {
+      allow get, list: if isAdmin() || isOwner(resource.data.studentId) || isCourseTeacherOf(resource.data.courseId);
+      allow create, update: if isAdmin() || isCourseTeacherOf(request.resource.data.courseId);
+      allow delete: if isAdmin() || isCourseTeacherOf(resource.data.courseId);
+    }
+
+    // ---------------------------------------------------------------------
+    // announcements/{id} — admin can target anyone (scope 'all'/'role');
+    // a teacher can only target their own course/group ('course'/'group'
+    // scope). Either the creator or admin can edit/delete afterward.
+    // ---------------------------------------------------------------------
+    match /announcements/{id} {
+      allow get, list: if isSignedIn();
+      allow create: if (isAdmin() || hasRole(request.auth.uid, 'teacher'))
+        && request.resource.data.createdBy == request.auth.uid
+        && (isAdmin() || request.resource.data.audienceScope in ['course', 'group']);
+      allow update, delete: if isAdmin() || resource.data.createdBy == request.auth.uid;
+    }
+
+    // ---------------------------------------------------------------------
+    // notifications/{uid}/items/{id} — fanned out by whichever
+    // teacher/admin action triggered them (no Cloud Functions yet to do
+    // this server-side — see ARCHITECTURE.md). A teacher/admin can write
+    // into any student's notification list; only the owner can mark
+    // their own notifications read.
+    // ---------------------------------------------------------------------
+    match /notifications/{uid}/items/{id} {
+      allow get, list: if isOwner(uid) || isAdmin();
+      allow create: if isAdmin() || hasRole(request.auth.uid, 'teacher');
+      allow update: if isOwner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // payments/{studentId_yearMonth} — one record per student per month.
+    // Financial data: admin-only write, student can read only their own
+    // (no teacher access — this is more sensitive than grades).
+    // ---------------------------------------------------------------------
+    match /payments/{id} {
+      allow get, list: if isAdmin() || isOwner(resource.data.studentId);
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // settings/{id} — small admin-configured values (e.g. the monthly fee
+    // amount used to build payment reminder text). Read is broad since
+    // it's non-sensitive and the reminder-composing UI needs it.
+    // ---------------------------------------------------------------------
+    match /settings/{id} {
+      allow get, list: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // schedules/{id} — admin-managed weekly recurring slots, org-readable.
+    // ---------------------------------------------------------------------
+    match /schedules/{id} {
+      allow get, list: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,68 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      let requester = firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
+      return isSignedIn() && requester.role == 'admin' && requester.status == 'active';
+    }
+
+    function isCourseTeacher(courseId) {
+      let course = firestore.get(/databases/(default)/documents/courses/$(courseId)).data;
+      let requester = firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
+      return isSignedIn() && course.teacherId == request.auth.uid && requester.status == 'active';
+    }
+
+    function isAllowedAttachmentType() {
+      return request.resource.contentType.matches('application/pdf')
+        || request.resource.contentType.matches('application/vnd\\.openxmlformats-officedocument\\..*')
+        || request.resource.contentType.matches('application/zip')
+        || request.resource.contentType.matches('application/x-zip-compressed')
+        || request.resource.contentType.matches('image/.*');
+    }
+
+    // Lesson attachments: PDF / DOCX / PPTX / XLSX / images / ZIP, 25MB cap.
+    // Readable by any signed-in EMS user for now (course material isn't
+    // confidential); tighter group-scoped read access can be added once
+    // enrollment data exists to check against.
+    match /courses/{courseId}/lessons/{lessonId}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if (isAdmin() || isCourseTeacher(courseId))
+        && request.resource.size < 25 * 1024 * 1024
+        && isAllowedAttachmentType();
+      allow delete: if isAdmin() || isCourseTeacher(courseId);
+    }
+
+    // Homework attachments (teacher/admin-authored instructions material).
+    // Same type/size policy and read-access rationale as lesson attachments.
+    match /homework/{courseId}/{hwId}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if (isAdmin() || isCourseTeacher(courseId))
+        && request.resource.size < 25 * 1024 * 1024
+        && isAllowedAttachmentType();
+      allow delete: if isAdmin() || isCourseTeacher(courseId);
+    }
+
+    // Student submission files. A student can only touch their own
+    // submission folder; the course's teacher and admin can read every
+    // student's files (for grading) but never write into them.
+    match /homework/{courseId}/{hwId}/submissions/{studentId}/{fileName} {
+      allow read: if isSignedIn() && (request.auth.uid == studentId || isAdmin() || isCourseTeacher(courseId));
+      allow write: if isSignedIn() && request.auth.uid == studentId
+        && request.resource.size < 25 * 1024 * 1024
+        && isAllowedAttachmentType();
+      allow delete: if isSignedIn() && (request.auth.uid == studentId || isAdmin());
+    }
+
+    // Deny everything else by default (quiz files etc. land in their own
+    // module with their own rules).
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
