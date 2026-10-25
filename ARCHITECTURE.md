@@ -67,7 +67,72 @@ announcements/{id}         title, body, audience{scope,role,courseId,groupId}, p
 notifications/{uid}/items/{id}  type, title, body, link, read, createdAt
 auditLogs/{id}             actorId, actorRole, action, targetType, targetId,
                            before, after, reason, createdAt   (create-only, admin-read)
+
+hanziWords/{id}            hanzi, pinyin, translation, altPinyin[], altTranslations[], hsk,
+                           tags[], ownerId, ownerName          (teachers/admin read; owner edits)
+hanziAssignments/{id}      courseId, teacherId, groupIds[], studentIds[], targetStudentIds[],
+                           title, exerciseTypes[], wordIds[], itemCount, dueAt, allowLate,
+                           maxScore, maxAttempts, gridType, allowStrokeHints,
+                           pinyinRequireTones, writingMistakeTolerance, status(draft|published|closed)
+  └ items/{itemId}         order, type, wordId, showHanzi, showPinyin, showTranslation,
+                           target, charCount                   (targeted students; no answers)
+  └ keys/{itemId}          hanzi, pinyin, translation, accepted[]   (teacher/admin only)
+hanziSubmissions/{assignmentId}_{studentId}
+                           answers{itemId: text, writing[], freehand}, status(draft|submitted|
+                           in_review|needs_revision|reviewed), attemptsUsed, submittedAt,
+                           autoResult{score, verdicts, wrongWords, checkedBy},
+                           teacherScore, teacherFeedback, itemComments, itemOverrides,
+                           finalWrongWords, reviewedBy, reviewedAt
 ```
+
+## Hanzi practice (汉字练习)
+
+A module inside the same app — same login, roles, groups, courses,
+notifications and audit log; no second user/student database.
+
+- **Vocabulary:** EMS had no word base (the question bank is a
+  different shape), so `hanziWords` is the single shared one. Assignment
+  items are *copies* of the words, so editing/deleting a word never
+  breaks existing assignments.
+- **Visibility:** an assignment's `targetStudentIds` stays empty while
+  it's a draft and is filled in on publish (group members, or the
+  teacher's individual picks). Rules grant student read access only via
+  `uid in targetStudentIds`, so drafts and other groups' work are
+  unreachable, and the student list query (`array-contains uid`) is
+  rules-provable without an index.
+- **Answers vs prompts:** same split as quizzes — `items` (prompts) are
+  student-readable, `keys` (accepted answers) are teacher/admin-only.
+  Two unavoidable exceptions, documented in the UI: a *writing* item's
+  `target` (HanziWriter must know the character to check strokes) and a
+  *dictation* item's `target` (text-to-speech needs the text). Those two
+  exercise types are practice-grade, not exam-grade.
+- **Checking:** `src/features/hanzi/checking.ts` (pure, dependency-free)
+  grades pinyin (tone marks == tone numbers), translations (normalised
+  string match + teacher-listed synonyms), typed hanzi, and writing
+  (HanziWriter's per-stroke result reported by the student's browser —
+  *not* OCR; free-hand drawings are left for the teacher). It runs in
+  the teacher's browser when they open an assignment (keys never reach a
+  student) and, optionally, server-side in the `hanziAutoCheck` Cloud
+  Function (an identical copy at `functions/src/hanziChecking.ts`) so
+  students see the automatic result immediately.
+- **Two scores:** `autoResult` (machine) and `teacherScore` (final) are
+  separate fields; each side can only write its own (rules-enforced).
+- **QR / link:** `#/hanzi/a/{id}`, built from `location.origin +
+  import.meta.env.BASE_URL`, so it is correct for any repo name /
+  GitHub Pages subpath. Signed-out visitors go through `/login` and come
+  back (ProtectedRoute `state.from`). QR PNGs are generated in-house
+  (`lib/qr.ts`) — no npm dependency.
+- **HanziWriter** is loaded at runtime from jsDelivr (same CDN as its
+  stroke data) instead of npm, and both are cached by the service worker
+  (`runtimeCaching` in `vite.config.ts`) for offline use. The module
+  therefore adds **no** packages to `package.json`/`package-lock.json`.
+- **Offline:** answers are written to `localStorage` on every change and
+  autosaved to Firestore (whose IndexedDB queue retries offline writes);
+  the UI never waits more than a few seconds on an offline write.
+- **Student code login:** `/login` accepts `code` as shorthand for
+  `code@student.laoshi.local` (`VITE_STUDENT_LOGIN_DOMAIN`), still a
+  normal Email/Password account. There is deliberately no password-less
+  "type your name" entry — anyone could impersonate a classmate.
 
 ## RBAC without custom claims
 

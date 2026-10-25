@@ -19,6 +19,22 @@ rules, Cloud Functions, or auth.
 - [ ] Firestore → Rules tab shows no unexpected warnings when you
       open it (a quick visual sanity check after pasting).
 
+## Hanzi practice module
+
+- [ ] The latest `firestore.rules` (with the "Hanzi practice" section)
+      is published — open **汉字练习** as a teacher; a "couldn't load"
+      message means the old rules are still live.
+- [ ] Walked through README → "Setting up & trying Hanzi practice" once
+      on a real phone: scan the QR code, sign in, write a character,
+      submit, review it as the teacher.
+- [ ] Writing exercises load on the school Wi-Fi: they need
+      `cdn.jsdelivr.net` (HanziWriter + stroke data). If a firewall
+      blocks it, writing falls back to free-hand pictures.
+- [ ] Dictation: check that student phones have a Chinese
+      text-to-speech voice (the page warns when none is installed).
+- [ ] Optional: `hanziAutoCheck` function deployed (instant automatic
+      results for students).
+
 ## Cloud Functions (Module 10)
 
 - [ ] All five functions show as deployed and healthy in Firebase
@@ -63,6 +79,14 @@ rules, Cloud Functions, or auth.
       what's actually happening when Telegram/reminders misbehave.
 
 ## Known, accepted trade-offs (not bugs — deliberate scope decisions)
+
+- Hanzi writing/dictation items reveal the target character to the
+  student's device (HanziWriter and text-to-speech need it) — fine for
+  practice, not for high-stakes tests. Pinyin/translation/typed-hanzi
+  answers stay server-side (teacher-only `keys`).
+- HanziWriter checks strokes against a known character; it does not
+  recognise free-hand writing. The "writing" result is reported by the
+  student's browser, so the teacher's review stays the final word.
 
 - No FCM (browser push) — Telegram covers "notified when the site
   isn't open"; adding FCM risks conflicting with the PWA's offline
