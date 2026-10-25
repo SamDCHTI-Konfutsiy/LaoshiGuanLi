@@ -10,6 +10,7 @@ export function StudentLayout() {
       extraNavItems={[
         { to: '/student/courses', label: t('nav.myCourses') },
         { to: '/student/grades', label: t('nav.grades') },
+        { to: '/student/hanzi', label: t('nav.hanzi') },
       ]}
     />
   );

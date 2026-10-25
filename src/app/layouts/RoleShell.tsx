@@ -25,20 +25,23 @@ export function RoleShell({ role, basePath, extraNavItems = [] }: RoleShellProps
     { to: `${basePath}/profile`, label: t('nav.profile'), end: false, badge: 0 },
   ];
 
+  // Desktop: the original fixed left sidebar. Phones (< md): the same links
+  // as a horizontally scrollable bar above the page, so content (e.g. a
+  // student who opened a Hanzi assignment from a QR code) gets the full width.
   return (
-    <div className="flex flex-1">
-      <nav className="w-56 shrink-0 border-r border-border p-4">
-        <span className="inline-block rounded-full bg-steel-50 px-2.5 py-1 text-xs font-medium text-steel-600 dark:bg-surface-raised dark:text-steel-300">
+    <div className="flex min-w-0 flex-1 flex-col md:flex-row">
+      <nav className="shrink-0 border-b border-border px-3 py-2 md:w-56 md:border-b-0 md:border-r md:p-4">
+        <span className="hidden rounded-full bg-steel-50 px-2.5 py-1 text-xs font-medium text-steel-600 md:inline-block dark:bg-surface-raised dark:text-steel-300">
           {t(`auth.roles.${role}`)}
         </span>
-        <ul className="mt-4 flex flex-col gap-1">
+        <ul className="flex gap-1 overflow-x-auto md:mt-4 md:flex-col md:overflow-visible">
           {navItems.map((item) => (
-            <li key={item.to}>
+            <li key={item.to} className="shrink-0">
               <NavLink
                 to={item.to}
                 end={item.end}
                 className={({ isActive }) =>
-                  'flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ' +
+                  'flex items-center justify-between gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ' +
                   (isActive ? 'bg-surface-raised text-text' : 'text-text-muted hover:bg-surface-raised hover:text-text')
                 }
               >
@@ -53,7 +56,7 @@ export function RoleShell({ role, basePath, extraNavItems = [] }: RoleShellProps
           ))}
         </ul>
       </nav>
-      <main className="flex flex-1 flex-col">
+      <main className="flex min-w-0 flex-1 flex-col">
         {profile && <Outlet />}
       </main>
     </div>

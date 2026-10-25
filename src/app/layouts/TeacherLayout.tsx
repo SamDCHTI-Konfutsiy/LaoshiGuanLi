@@ -10,6 +10,7 @@ export function TeacherLayout() {
       extraNavItems={[
         { to: '/teacher/courses', label: t('nav.myCourses') },
         { to: '/teacher/question-bank', label: t('quiz.bank.title') },
+        { to: '/teacher/hanzi', label: t('nav.hanzi') },
       ]}
     />
   );

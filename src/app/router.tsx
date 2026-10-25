@@ -38,6 +38,23 @@ const NotificationsPage = lazy(() => import('@/features/notifications/pages/Noti
 const SearchPage = lazy(() => import('@/features/search/pages/SearchPage').then((m) => ({ default: m.SearchPage })));
 const AuditLogPage = lazy(() => import('@/features/audit/pages/AuditLogPage').then((m) => ({ default: m.AuditLogPage })));
 const PaymentsPage = lazy(() => import('@/features/payments/pages/PaymentsPage').then((m) => ({ default: m.PaymentsPage })));
+// 汉字练习 — Hanzi practice module
+const HanziPage = lazy(() => import('@/features/hanzi/pages/HanziPage').then((m) => ({ default: m.HanziPage })));
+const HanziAssignmentFormPage = lazy(() => import('@/features/hanzi/pages/AssignmentFormPage').then((m) => ({ default: m.AssignmentFormPage })));
+const HanziAssignmentDetailPage = lazy(() => import('@/features/hanzi/pages/AssignmentDetailPage').then((m) => ({ default: m.AssignmentDetailPage })));
+const HanziReviewPage = lazy(() => import('@/features/hanzi/pages/ReviewPage').then((m) => ({ default: m.ReviewPage })));
+const StudentHanziListPage = lazy(() => import('@/features/hanzi/pages/StudentHanziListPage').then((m) => ({ default: m.StudentHanziListPage })));
+const StudentHanziAssignmentPage = lazy(() => import('@/features/hanzi/pages/StudentAssignmentPage').then((m) => ({ default: m.StudentAssignmentPage })));
+const HanziDeepLink = lazy(() => import('@/features/hanzi/pages/HanziDeepLink').then((m) => ({ default: m.HanziDeepLink })));
+
+/** Teacher + admin share the same Hanzi pages; each page scopes its data by role. */
+const hanziManageRoutes: RouteObject[] = [
+  { path: 'hanzi', element: <HanziPage /> },
+  { path: 'hanzi/new', element: <HanziAssignmentFormPage /> },
+  { path: 'hanzi/assignments/:assignmentId', element: <HanziAssignmentDetailPage /> },
+  { path: 'hanzi/assignments/:assignmentId/edit', element: <HanziAssignmentFormPage /> },
+  { path: 'hanzi/assignments/:assignmentId/review/:studentId', element: <HanziReviewPage /> },
+];
 
 /** One role's routed subtree: /{path} (home), /{path}/profile, plus any
  * feature routes — gated to that role only. */
@@ -75,6 +92,7 @@ const adminRoutes: RouteObject[] = [
   { path: 'courses/:courseId/quizzes/:quizId/attempts', element: <QuizGradingPage /> },
   { path: 'audit', element: <AuditLogPage /> },
   { path: 'payments', element: <PaymentsPage /> },
+  ...hanziManageRoutes,
 ];
 
 const teacherRoutes: RouteObject[] = [
@@ -85,6 +103,7 @@ const teacherRoutes: RouteObject[] = [
   { path: 'courses/:courseId/gradebook', element: <GradebookPage /> },
   { path: 'courses/:courseId/quizzes/:quizId/attempts', element: <QuizGradingPage /> },
   { path: 'question-bank', element: <QuestionBankPage /> },
+  ...hanziManageRoutes,
 ];
 
 const studentRoutes: RouteObject[] = [
@@ -92,6 +111,8 @@ const studentRoutes: RouteObject[] = [
   { path: 'courses/:courseId', element: <CourseDetailPage /> },
   { path: 'courses/:courseId/quizzes/:quizId/take/:attemptNumber', element: <QuizTakingPage /> },
   { path: 'grades', element: <MyGradesPage /> },
+  { path: 'hanzi', element: <StudentHanziListPage /> },
+  { path: 'hanzi/:assignmentId', element: <StudentHanziAssignmentPage /> },
 ];
 
 export const router = createHashRouter([
@@ -105,6 +126,8 @@ export const router = createHashRouter([
         element: <ProtectedRoute />,
         children: [
           { index: true, element: <RoleRedirect /> },
+          // QR / share-link entry point — any role, resolved by HanziDeepLink.
+          { path: 'hanzi/a/:assignmentId', element: <HanziDeepLink /> },
           roleBranch('admin', 'admin', AdminLayout, adminRoutes),
           roleBranch('teacher', 'teacher', TeacherLayout, teacherRoutes),
           roleBranch('student', 'student', StudentLayout, studentRoutes),

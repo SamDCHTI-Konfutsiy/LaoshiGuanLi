@@ -14,6 +14,7 @@ export function AdminLayout() {
         { to: '/admin/groups', label: t('admin.nav.groups') },
         { to: '/admin/courses', label: t('admin.nav.courses') },
         { to: '/admin/payments', label: t('nav.payments') },
+        { to: '/admin/hanzi', label: t('nav.hanzi') },
         { to: '/admin/audit', label: t('admin.nav.audit') },
       ]}
     />

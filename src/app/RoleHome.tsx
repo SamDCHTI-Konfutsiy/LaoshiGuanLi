@@ -51,6 +51,9 @@ function AdminHome({ basePath }: { basePath: string }) {
       <StatCard label={t('dashboard.courses')} value={stats.courses} to={`${basePath}/courses`} />
       <StatCard label={t('dashboard.groups')} value={stats.groups} to={`${basePath}/groups`} />
       <StatCard label={t('dashboard.unpaidThisMonth')} value={stats.unpaidThisMonth} to={`${basePath}/payments`} />
+      {stats.hanziToReview !== null && (
+        <StatCard label={t('dashboard.hanziToReview')} value={stats.hanziToReview} to={`${basePath}/hanzi?tab=review`} />
+      )}
     </div>
   );
 }
@@ -69,6 +72,9 @@ function TeacherHome({ basePath, profile }: { basePath: string; profile: UserPro
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
       <StatCard label={t('dashboard.myCourses')} value={stats.courses} to={`${basePath}/courses`} />
       <StatCard label={t('dashboard.myStudents')} value={stats.students} />
+      {stats.hanziToReview !== null && (
+        <StatCard label={t('dashboard.hanziToReview')} value={stats.hanziToReview} to={`${basePath}/hanzi?tab=review`} />
+      )}
     </div>
   );
 }
@@ -92,6 +98,7 @@ function StudentHome({ basePath }: { basePath: string }) {
         value={stats.paidThisMonth ? t('payments.paid') : t('payments.unpaid')}
         positive={stats.paidThisMonth}
       />
+      {stats.hanziOpen !== null && <StatCard label={t('dashboard.hanziOpen')} value={stats.hanziOpen} to={`${basePath}/hanzi`} />}
     </div>
   );
 }
