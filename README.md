@@ -6,17 +6,6 @@ application shell only.
 
 ## Status
 
-**Latest: Hanzi practice module (汉字练习 — Hanzi mashqlari).** A new
-section for teachers/admin (word base, assignment builder, QR code,
-review inbox, statistics) and students (assignments opened from the
-list or by scanning a QR code: stroke-checked hanzi writing on a
-米字格/田字格 grid, free-hand writing, typed hanzi, pinyin,
-translation, dictation). See "Setting up & trying Hanzi practice"
-below and ARCHITECTURE.md → "Hanzi practice". **`firestore.rules`
-changed — re-publish it** (see below). No new npm packages.
-
-Previous round:
-
 **Telegram bot admin panel + payment reminder buttons + Telegram unlink.**
 
 Built the full Telegram bot admin panel requested — send `/admin` to
@@ -76,17 +65,12 @@ the box once Email/Password sign-in is enabled.
 
 ## Re-publishing rules after this update
 
-**`firestore.rules` changed (Hanzi module)** — paste the whole file into
-Firebase Console → Firestore Database → Rules and **Publish**. Until you
-do, the Hanzi pages show a "couldn't load" message and the Hanzi
-dashboard cards stay hidden; nothing else in the app is affected.
-`storage.rules` did not change (handwriting is stored as vector data in
-Firestore, not as files). No new indexes are needed.
+Neither `firestore.rules` nor `storage.rules` changed this round — the
+bot admin panel writes through the Admin SDK, which bypasses rules
+entirely, and Telegram unlink reuses fields already allowed from
+before. **Nothing to re-publish.**
 
-Optional: `cd functions && npm run build && cd .. && firebase deploy
---only functions:hanziAutoCheck` deploys the server-side automatic
-check, so students see their automatic result right after submitting.
-Without it, the same check runs when the teacher opens the assignment.
+The Cloud Functions **do** need redeploying though — see below.
 
 This update also adds a new Cloud Function (`paymentReminders`) — see
 "Setting up & trying payments" below for the redeploy steps.
@@ -239,59 +223,6 @@ check).
   work through [`PRODUCTION_CHECKLIST.md`](PRODUCTION_CHECKLIST.md) —
   it also lists every deliberate scope cut made across all 11 modules
   in one place.
-
-## Setting up & trying Hanzi practice (汉字练习)
-
-1. Publish the new `firestore.rules` (above).
-2. As a **teacher** (with a course that has a group): sidebar → **汉字练习
-   — Hanzi practice** → **Word base** → **Add HSK 1 starter words** (or
-   **Import CSV** — columns `hanzi,pinyin,translation,hsk,altPinyin,
-   altTranslations,tags`, lists separated by `|`; **Download CSV
-   template** shows an example). Tone numbers (`ni3 hao3`) are turned
-   into tone marks automatically. **Stroke order** previews the animation.
-3. **Assignments → New assignment**: course, title, group(s) (or tick
-   *Only selected students*), pick words (search / HSK filter, or add a
-   new word inline), exercise types, deadline, max score, attempts,
-   grid (米字格/田字格), hints on/off, tones required on/off → **Save
-   draft** → **Publish**. Students get an in-app notification (and
-   Telegram, if linked).
-4. The assignment page shows the **QR code** (Download PNG / Copy link).
-   Scan it with a phone: sign-in page (with a "Hanzi assignment" banner)
-   → after signing in the assignment opens directly. Students sign in
-   with their e-mail, or a **student code** (see below).
-5. As the **student**: answer, watch "saved" in the bottom bar (answers
-   are also kept on the device if the connection drops), **Submit**.
-   With attempts left, **Try again** withdraws the submission.
-6. As the **teacher**: the **To review** tab (or the dashboard card)
-   lists submissions; opening one marks it *In review*, shows the
-   automatic verdict per item, the handwriting pictures, and lets you
-   override verdicts, comment, and set the final score → **Mark
-   reviewed** or **Needs revision** (gives the student one more go).
-7. **Statistics** tab: completion, unreviewed count, average score, by
-   group / assignment / student, most-missed words, **Export CSV** (also
-   per assignment on its page).
-
-**Student codes (optional):** create the student account (Users → bulk
-CSV import, or the Telegram bot) with an e-mail like
-`s1024@student.laoshi.local`; the student can then sign in by typing
-just `s1024` + password. Change the domain with the
-`VITE_STUDENT_LOGIN_DOMAIN` build variable (`.github/workflows/deploy.yml`).
-Limitation: password-reset e-mails can't reach such synthetic addresses
-and the app has no "set password" screen yet, so a forgotten code
-password means creating the account again (or adding an Admin-SDK
-password-reset function later). Use real e-mails where self-service
-reset matters.
-
-**What is automatic and what isn't** (also explained in the UI):
-pinyin (tone marks ≡ tone numbers; tones optional per assignment),
-translations (exact match after normalising case/punctuation/Uzbek
-apostrophes, plus synonyms you list), typed hanzi and dictation are
-checked automatically. Hanzi writing is checked **stroke by stroke by
-HanziWriter against the known character** — it is not handwriting
-recognition; a free-hand drawing is saved as a picture for the teacher.
-Writing and dictation items necessarily send the character to the
-student's device (HanziWriter / text-to-speech need it), so treat them
-as practice, not as a secure test.
 
 ## Setting up & trying payments
 
