@@ -1,5 +1,5 @@
 import type { Timestamp } from 'firebase/firestore';
-import type { AccountStatus, AnnouncementScope, AttemptStatus, AttendanceStatus, HomeworkStatus, Locale, NotificationType, QuestionCategory, QuestionDifficulty, QuestionType, QuizStatus, Role } from '@/types/enums';
+import type { AccountStatus, AnnouncementScope, AttemptStatus, AttendanceStatus, HanziAssignmentStatus, HanziExerciseType, HanziGridType, HanziItemVerdict, HanziSubmissionStatus, HomeworkStatus, Locale, NotificationType, QuestionCategory, QuestionDifficulty, QuestionType, QuizStatus, Role } from '@/types/enums';
 
 /** Attaches the Firestore document ID to a model read from a query/get. */
 export type WithId<T> = T & { id: string };
@@ -297,4 +297,142 @@ export interface ScheduleSlot {
   startTime: string; // "HH:mm"
   endTime: string; // "HH:mm"
   createdAt: Timestamp | null;
+}
+
+// ---------------------------------------------------------------------------
+// Hanzi practice module (汉字练习) — see ARCHITECTURE.md → "Hanzi practice".
+// ---------------------------------------------------------------------------
+
+/** hanziWords/{id} — the shared school vocabulary base. Readable by every active teacher/admin; editable by its owner or admin. */
+export interface HanziWord {
+  hanzi: string;
+  /** Display pinyin, tone marks or tone numbers (nǐ hǎo / ni3 hao3) — both are accepted when checking. */
+  pinyin: string;
+  /** Uzbek meaning, as shown to students. */
+  translation: string;
+  /** Extra accepted pinyin spellings (rare — e.g. a heteronym reading). */
+  altPinyin: string[];
+  /** Extra accepted Uzbek translations (synonyms). */
+  altTranslations: string[];
+  /** HSK level 1–9 (HSK 3.0; old HSK 1–6 fits inside), or null if unlevelled. */
+  hsk: number | null;
+  tags: string[];
+  ownerId: string;
+  ownerName: string;
+  createdAt: Timestamp | null;
+}
+
+/** hanziAssignments/{id} */
+export interface HanziAssignment {
+  courseId: string;
+  /** Copied from the course at creation — lets rules and queries scope by teacher without an extra get(). */
+  teacherId: string;
+  groupIds: string[];
+  /** Individually picked students. Empty = every member of `groupIds`. */
+  studentIds: string[];
+  /**
+   * Resolved list of students who may open this assignment. Always empty
+   * while status is 'draft' and filled in by publish — this is the field
+   * firestore.rules checks for student read access.
+   */
+  targetStudentIds: string[];
+  title: string;
+  instructions: string;
+  exerciseTypes: HanziExerciseType[];
+  wordIds: string[];
+  itemCount: number;
+  dueAt: Timestamp | null;
+  allowLate: boolean;
+  maxScore: number;
+  maxAttempts: number;
+  gridType: HanziGridType;
+  /** Lets the student watch the stroke-order animation / get hints. Showing it reveals the answer, so it is opt-in. */
+  allowStrokeHints: boolean;
+  pinyinRequireTones: boolean;
+  /** Max HanziWriter-reported mistakes per character still counted as correct. */
+  writingMistakeTolerance: number;
+  status: HanziAssignmentStatus;
+  createdBy: string;
+  createdAt: Timestamp | null;
+  publishedAt: Timestamp | null;
+}
+
+/**
+ * hanziAssignments/{id}/items/{itemId} — student-readable, never holds the
+ * accepted answers. `target` is the one unavoidable exception: HanziWriter
+ * needs the character to check strokes ('writing'), and the browser's
+ * text-to-speech needs the text to read it aloud ('dictation').
+ */
+export interface HanziItem {
+  order: number;
+  type: HanziExerciseType;
+  wordId: string;
+  showHanzi: string | null;
+  showPinyin: string | null;
+  showTranslation: string | null;
+  target: string | null;
+  charCount: number;
+}
+
+/** hanziAssignments/{id}/keys/{itemId} — teacher/admin only. */
+export interface HanziKey {
+  hanzi: string;
+  pinyin: string;
+  translation: string;
+  /** What a text answer is compared against (already includes the alternatives). */
+  accepted: string[];
+}
+
+/** One drawn character in a 'writing' item, as reported by HanziWriter in the student's browser. */
+export interface HanziWritingChar {
+  char: string;
+  completed: boolean;
+  mistakes: number;
+  /** SVG path data (1024×1024 box) of the strokes the student drew that HanziWriter accepted. */
+  strokes: string;
+  /** SVG path data of rejected strokes. */
+  wrongStrokes: string;
+}
+
+export interface HanziAnswer {
+  text: string;
+  writing: HanziWritingChar[];
+  /** Free-hand drawing (no automatic recognition), SVG path data in a 1000×1000 box. */
+  freehand: string;
+}
+
+export interface HanziAutoResult {
+  score: number;
+  maxScore: number;
+  correct: number;
+  total: number;
+  verdicts: Record<string, HanziItemVerdict>;
+  /** Hanzi of every item not answered correctly (duplicates kept) — feeds the "most-missed words" statistic. */
+  wrongWords: string[];
+  checkedAt: Timestamp | null;
+  checkedBy: 'function' | 'teacher';
+}
+
+/** hanziSubmissions/{assignmentId}_{studentId} */
+export interface HanziSubmission {
+  assignmentId: string;
+  courseId: string;
+  teacherId: string;
+  studentId: string;
+  answers: Record<string, HanziAnswer>;
+  status: HanziSubmissionStatus;
+  attemptsUsed: number;
+  savedAt: Timestamp | null;
+  submittedAt: Timestamp | null;
+  /** Automatic check — kept separate from the teacher's final score, never overwritten by it. */
+  autoResult: HanziAutoResult | null;
+  teacherScore: number | null;
+  teacherFeedback: string;
+  itemComments: Record<string, string>;
+  /** Teacher's per-item correction of the automatic verdict. */
+  itemOverrides: Record<string, HanziItemVerdict>;
+  /** Like autoResult.wrongWords, but after the teacher's per-item corrections. Set on review. */
+  finalWrongWords: string[];
+  reviewedBy: string | null;
+  reviewedAt: Timestamp | null;
 }

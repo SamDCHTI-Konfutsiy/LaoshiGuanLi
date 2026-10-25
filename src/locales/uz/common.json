@@ -27,7 +27,8 @@
     "schedule": "Jadval",
     "notifications": "Bildirishnomalar",
     "search": "Qidiruv",
-    "payments": "To'lovlar"
+    "payments": "To'lovlar",
+    "hanzi": "汉字练习 — Hanzi mashqlari"
   },
   "auth": {
     "loginTitle": "Kirish",
@@ -77,7 +78,8 @@
     "backToSignIn": "Kirishga qaytish",
     "pendingTitle": "Hisobingiz tasdiqlanishi kutilmoqda",
     "pendingMessage": "Siz {{role}} sifatida qo'shilishni so'radingiz. Davom etishdan oldin administrator hisobingizni tasdiqlashi kerak — birozdan so'ng qayta tekshiring.",
-    "nameManagedByAdmin": "Ismingizni faqat administrator o'zgartira oladi — o'zgartirish uchun u bilan bog'laning."
+    "nameManagedByAdmin": "Ismingizni faqat administrator o'zgartira oladi — o'zgartirish uchun u bilan bog'laning.",
+    "emailOrCode": "Email yoki o'quvchi kodi"
   },
   "common": {
     "add": "Qo'shish",
@@ -471,7 +473,9 @@
     "myCourses": "Mening kurslarim",
     "myStudents": "Mening talabalarim",
     "unpaidThisMonth": "Bu oy to'lamagan",
-    "paymentStatus": "Bu oygi to'lov"
+    "paymentStatus": "Bu oygi to'lov",
+    "hanziToReview": "Tekshirilmagan Hanzi ishlari",
+    "hanziOpen": "Bajarilmagan Hanzi topshiriqlari"
   },
   "gradebook": {
     "title": "Baho jurnali",
@@ -539,5 +543,275 @@
     "reminderSent": "Eslatma yuborildi",
     "sendBulkReminder": "Barcha to'lamaganlarga eslatma yuborish ({{count}})",
     "bulkReminderSent": "{{count}} ta talabaga eslatma yuborildi."
+  },
+  "hanzi": {
+    "title": "Hanzi mashqlari",
+    "subtitle": "Ieroglif yozish, pinyin, tarjima va diktant mashqlari — QR-kod orqali tarqatiladi, avtomatik tekshiriladi, siz baholaysiz.",
+    "tabs": {
+      "assignments": "Topshiriqlar",
+      "review": "Tekshirish",
+      "words": "So'zlar bazasi",
+      "stats": "Statistika"
+    },
+    "common": {
+      "loadError": "Ma'lumotni yuklab bo'lmadi. Agar Hanzi moduli endi qo'shilgan bo'lsa, yangi firestore.rules e'lon qilinganini tekshiring.",
+      "notFound": "Topilmadi."
+    },
+    "types": {
+      "writing": "Hanzi yozish",
+      "hanzi_input": "Hanzi kiritish",
+      "pinyin": "Pinyin",
+      "translation": "Tarjima",
+      "dictation": "Diktant"
+    },
+    "typeHelp": {
+      "writing": "O'quvchi pinyin va ma'nosini ko'radi, ieroglifni chizadi; HanziWriter chiziqlar tartibini tekshiradi.",
+      "hanzi_input": "O'quvchi pinyin va ma'nosini ko'radi, ieroglifni xitoycha klaviatura bilan yozadi.",
+      "pinyin": "O'quvchi ieroglif va ma'nosini ko'radi, pinyinini yozadi (ton belgisi yoki raqami bilan).",
+      "translation": "O'quvchi ieroglif va pinyinni ko'radi, o'zbekcha ma'nosini yozadi.",
+      "dictation": "O'quvchi so'zni eshitadi (qurilma ovozi orqali) va ieroglifda yozadi."
+    },
+    "grid": {
+      "mi": "米字格 (mi katak)",
+      "tian": "田字格 (tian katak)"
+    },
+    "status": {
+      "not_started": "Yuborilmagan",
+      "draft": "Yuborilmagan",
+      "submitted": "Yuborilgan",
+      "in_review": "Tekshirilmoqda",
+      "needs_revision": "Qayta ishlash kerak",
+      "reviewed": "Tekshirildi"
+    },
+    "assignmentStatus": {
+      "draft": "Qoralama",
+      "published": "E'lon qilingan",
+      "closed": "Yopilgan"
+    },
+    "verdict": {
+      "correct": "To'g'ri",
+      "incorrect": "Noto'g'ri",
+      "unanswered": "Laoshi tekshiradi"
+    },
+    "fields": {
+      "hanzi": "Hanzi",
+      "pinyin": "Pinyin",
+      "translation": "O'zbekcha tarjima",
+      "altTranslations": "Boshqa qabul qilinadigan tarjimalar",
+      "altPinyin": "Boshqa qabul qilinadigan pinyin",
+      "tags": "Teglar"
+    },
+    "words": {
+      "intro": "Barcha o'qituvchilar uchun yagona so'zlar bazasi. Har kim har bir so'zdan foydalana oladi; faqat muallif (yoki admin) tahrirlaydi.",
+      "new": "Yangi so'z",
+      "edit": "So'zni tahrirlash",
+      "created": "So'z qo'shildi",
+      "updated": "So'z yangilandi",
+      "deleted": "So'z o'chirildi",
+      "deleteTitle": "So'z o'chirilsinmi?",
+      "deleteMessage": "\"{{hanzi}}\" so'zlar bazasidan o'chiriladi. Mavjud topshiriqlardagi nusxasi saqlanib qoladi.",
+      "empty": "Mos so'z topilmadi.",
+      "count": "{{total}} ta so'zdan {{count}} tasi ko'rsatilmoqda",
+      "searchPlaceholder": "汉字, pinyin yoki ma'no",
+      "mineOnly": "Faqat mening so'zlarim",
+      "owner": "Qo'shgan",
+      "allLevels": "Barchasi",
+      "hskFilter": "HSK darajasi",
+      "strokeOrder": "Chiziq tartibi",
+      "addStarter": "HSK 1 namuna so'zlarini qo'shish",
+      "nothingNew": "Bu so'zlarning barchasi bazada allaqachon bor.",
+      "imported": "Qo'shilgan so'zlar: {{count}}",
+      "importValid": "{{count}} ta qator to'g'ri ({{dup}} tasi bazada bor, o'tkazib yuboriladi).",
+      "onlyHanzi": "Faqat xitoycha ieroglif kiriting.",
+      "translationPlaceholder": "masalan: salom; assalomu alaykum",
+      "separatorHint": "Bir nechta qiymatni \";\" bilan ajrating. Ton raqamlari (ni3 hao3) avtomatik ton belgisiga aylantiriladi."
+    },
+    "assignments": {
+      "new": "Yangi topshiriq",
+      "empty": "Hali topshiriq yo'q — so'zlar bazasidan birinchisini yarating.",
+      "items": "Savollar: {{count}}",
+      "noDeadline": "Muddatsiz",
+      "open": "Ochish",
+      "sentOf": "{{total}} tadan {{sent}} tasi yuborgan",
+      "toReview": "tekshirish kerak: {{count}}",
+      "reviewedCount": "tekshirildi: {{count}}",
+      "published": "{{count}} ta o'quvchiga e'lon qilindi",
+      "publishedShort": "E'lon qilindi",
+      "deleted": "Topshiriq o'chirildi",
+      "deleteTitle": "Topshiriq o'chirilsinmi?",
+      "deleteMessage": "\"{{title}}\" va uning savollari o'chiriladi. O'quvchilar javoblari saqlanadi.",
+      "draftNote": "Bu qoralama — o'quvchilar hali ko'rmaydi. QR-kod va havola olish uchun e'lon qiling.",
+      "students": "O'quvchilar",
+      "noTargets": "Biriktirilgan o'quvchi yo'q.",
+      "noTargetsDraft": "O'quvchilar e'lon qilinganda biriktiriladi.",
+      "refreshTargets": "Guruhga yangi qo'shilganlarni qo'shish",
+      "refreshed": "O'quvchilar ro'yxati yangilandi",
+      "closed": "Topshiriq yopildi",
+      "reopen": "Qayta ochish",
+      "reopened": "Topshiriq qayta ochildi",
+      "itemsList": "Savollar va javoblar"
+    },
+    "builder": {
+      "newTitle": "Yangi Hanzi topshiriq",
+      "editTitle": "Hanzi topshiriqni tahrirlash",
+      "saveDraft": "Qoralamani saqlash",
+      "saved": "Saqlandi",
+      "basics": "Asosiy ma'lumot",
+      "course": "Kurs",
+      "titleField": "Nomi",
+      "titlePlaceholder": "masalan: HSK 1 · 3-dars",
+      "instructions": "Ko'rsatma (ixtiyoriy)",
+      "audience": "Kimga beriladi",
+      "noGroups": "Bu kursda guruh yo'q.",
+      "pickStudents": "Faqat tanlangan o'quvchilarga (aks holda butun guruhga)",
+      "noMembers": "Tanlangan guruhlarda o'quvchi yo'q.",
+      "words": "So'zlar",
+      "noWordsYet": "So'zlar bazasi bo'sh — avval so'z yoki HSK 1 namuna to'plamini qo'shing.",
+      "missingWords": "Avval tanlangan {{count}} ta so'z bazada endi mavjud emas.",
+      "tooManyWords": "Bitta topshiriqda ko'pi bilan {{max}} ta so'z.",
+      "exercises": "Mashqlar va sozlamalar",
+      "itemCount": "Jami savollar: {{count}}",
+      "dueAt": "Muddat (ixtiyoriy)",
+      "maxScore": "Maksimal ball",
+      "maxAttempts": "Urinishlar soni",
+      "grid": "Yozish katagi",
+      "tolerance": "Har bir ieroglifda ruxsat etilgan chiziq xatolari",
+      "allowHints": "Chiziq maslahatlari va tartib animatsiyasiga ruxsat berish",
+      "allowHintsHelp": "Ieroglif konturi/animatsiyasini ko'rsatadi — javobni ochib qo'yadi, nazorat ishida o'chiring.",
+      "requireTones": "Pinyinda tonlar majburiy",
+      "requireTonesHelp": "O'chirilsa, nǐ hǎo uchun \"ni hao\" ham to'g'ri hisoblanadi.",
+      "lockedNote": "Bu topshiriq e'lon qilingan: mavjud javoblar buzilmasligi uchun so'zlar, mashq turlari va baholash sozlamalari qulflangan. Nomi, ko'rsatma, muddat, ball va urinishlarni o'zgartirish mumkin.",
+      "noCourses": "Hanzi topshiriq yaratish uchun sizda kurs (guruhi bilan) bo'lishi kerak."
+    },
+    "qr": {
+      "title": "O'quvchilar uchun QR-kod",
+      "help": "O'quvchi telefon kamerasi bilan skanerlaydi, tizimga kiradi va topshiriq ochiladi. Faqat biriktirilgan o'quvchilar ko'ra oladi.",
+      "downloadPng": "PNG yuklab olish",
+      "copyLink": "Havolani nusxalash",
+      "copied": "Havola nusxalandi",
+      "open": "Ochish",
+      "alt": "{{title}} uchun QR-kod"
+    },
+    "review": {
+      "auto": "Avtomatik",
+      "final": "Yakuniy ball",
+      "check": "Tekshirish",
+      "view": "Ko'rish",
+      "showAll": "Tekshirilganlarni ham ko'rsatish",
+      "queueEmpty": "Tekshirishni kutayotgan ish yo'q.",
+      "expected": "To'g'ri javob",
+      "accepted": "qabul qilinadi",
+      "answer": "Javob",
+      "noAnswer": "Javob yo'q",
+      "unfinished": "tugallanmagan",
+      "freehand": "erkin yozuv",
+      "notChecked": "hali tekshirilmagan",
+      "override": "Sizning xulosangiz",
+      "opt": {
+        "auto": "Avto",
+        "correct": "To'g'ri",
+        "incorrect": "Noto'g'ri"
+      },
+      "comment": "Izoh / tuzatish",
+      "commentPlaceholder": "masalan: 3-chiziq chapdan o'ngga yoziladi",
+      "suggested": "Tuzatishlaringiz bilan",
+      "useSuggested": "qo'llash",
+      "byServer": "server tomonidan",
+      "byTeacher": "laoshi brauzerida",
+      "sendBack": "Qayta ishlashga qaytarish",
+      "markReviewed": "Tekshirildi",
+      "saved": "Baho saqlandi",
+      "sentBack": "Qayta ishlashga qaytarildi"
+    },
+    "stats": {
+      "allCourses": "Barcha kurslar",
+      "allGroups": "Barcha guruhlar",
+      "assignments": "E'lon qilingan topshiriqlar",
+      "completion": "Bajarilish",
+      "sentOfExpected": "Yuborilgan / kutilgan",
+      "unreviewed": "Tekshirilmagan ishlar",
+      "avg": "O'rtacha ball",
+      "avgNote": "O'rtacha ball laoshi bahosi bo'yicha hisoblanadi, u bo'lmasa — avtomatik baho bo'yicha.",
+      "empty": "Bu filtr bo'yicha e'lon qilingan topshiriq yo'q.",
+      "mostMissed": "Eng ko'p xato qilingan so'zlar",
+      "noMistakes": "Hali xato qayd etilmagan.",
+      "byGroup": "Guruhlar bo'yicha",
+      "byAssignment": "Topshiriqlar bo'yicha",
+      "byStudent": "O'quvchilar bo'yicha",
+      "students": "O'quvchilar",
+      "sent": "Yuborilgan",
+      "reviewed": "Tekshirilgan",
+      "assigned": "Berilgan"
+    },
+    "csv": {
+      "student": "O'quvchi",
+      "group": "Guruh",
+      "status": "Holat",
+      "attempts": "Urinishlar",
+      "autoScore": "Avtomatik ball",
+      "teacherScore": "Laoshi bahosi",
+      "maxScore": "Maks.",
+      "submittedAt": "Yuborilgan vaqt",
+      "late": "Kechikkan",
+      "feedback": "Izoh"
+    },
+    "student": {
+      "subtitle": "O'qituvchilaringiz bergan topshiriqlar. Shu yerdan yoki QR-kodni skanerlab oching.",
+      "empty": "Sizga hali Hanzi topshiriq berilmagan.",
+      "noAccess": "Bu topshiriq sizga biriktirilmagan (yoki o'chirilgan).",
+      "backToList": "Topshiriqlarimga qaytish"
+    },
+    "work": {
+      "attemptsLeft": "qolgan urinishlar: {{max}} tadan {{count}}",
+      "lateAllowed": "kechikib topshirish mumkin",
+      "offline": "Internet yo'q. Javoblaringiz shu qurilmada saqlanmoqda va aloqa tiklanganda avtomatik yuboriladi.",
+      "restored": "Yuborilmagan javoblaringiz shu qurilmadan tiklandi.",
+      "dictationPrompt": "Tinglang va ieroglifda yozing",
+      "listen": "Tinglash",
+      "listenSlow": "Sekinroq",
+      "noVoice": "Bu qurilmada xitoycha ovoz o'rnatilmagan — audio eshitilmasligi mumkin. Laoshiga ayting yoki boshqa brauzer/telefonda urinib ko'ring.",
+      "imeHint": "Telefon yoki kompyuterda xitoycha (pinyin) klaviaturani yoqing.",
+      "translationPlaceholder": "O'zbekcha ma'nosi",
+      "progress": "Javob berildi: {{done}} / {{total}}",
+      "save": {
+        "idle": "",
+        "saving": "saqlanmoqda…",
+        "saved": "saqlandi",
+        "queued": "qurilmada saqlandi (oflayn)",
+        "error": "saqlanmadi — keyingi o'zgarishda qayta urinadi"
+      },
+      "submit": "Yuborish",
+      "confirmTitle": "Javoblar yuborilsinmi?",
+      "confirmMessage": "{{total}} tadan {{done}} tasiga javob berildi. Shundan keyin qoladigan urinishlar: {{left}}.",
+      "submitted": "Yuborildi!",
+      "submitQueued": "Internet yo'q — javob aloqa tiklanishi bilan avtomatik yuboriladi.",
+      "submitFailed": "Yuborib bo'lmadi. Muddat o'tgan yoki urinishlar tugagan bo'lishi mumkin.",
+      "lateSubmitFailed": "Oflayn yuborilgan javob qabul qilinmadi (muddat yoki urinishlar). Topshiriqni tekshiring.",
+      "autoResult": "Avtomatik natija",
+      "waitTeacher": "yakuniy bahoni laoshi tasdiqlaydi.",
+      "waitAuto": "Yuborildi. Natija avtomatik tekshiruv / laoshi tekshiruvidan keyin chiqadi.",
+      "retry": "Qayta urinish",
+      "retryHelp": "Javobingiz qaytarib olinadi va uni yaxshilashingiz mumkin (qolgan urinishlar: {{count}}).",
+      "reviewedTitle": "Laoshi tekshirdi",
+      "revisionTitle": "Laoshi qayta ishlashni so'radi",
+      "teacherComment": "Laoshi",
+      "noItems": "Bu topshiriqda savol yo'q."
+    },
+    "writing": {
+      "drawHint": "Chiziqma-chiziq yozing",
+      "restart": "Qayta yozish",
+      "animate": "Chiziq tartibini ko'rsatish",
+      "mistakes": "xatolar: {{count}}",
+      "dataUnavailable": "Bu ieroglif chiziqlari yuklanmadi (internet yo'qmi?). Erkin yozishdan foydalaning.",
+      "useFree": "Erkin yozishga o'tish",
+      "useChecker": "Chiziq tekshiruviga qaytish",
+      "freeNote": "Erkin yozuv avtomatik tekshirilmaydi — rasmni laoshi ko'rib baholaydi.",
+      "freeCanvas": "Erkin yozish maydoni",
+      "undo": "Bekor qilish",
+      "clear": "Tozalash"
+    },
+    "login": {
+      "banner": "QR-koddagi Hanzi topshiriqni ochish uchun tizimga kiring."
+    }
   }
 }

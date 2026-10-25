@@ -27,7 +27,8 @@
     "schedule": "Schedule",
     "notifications": "Notifications",
     "search": "Search",
-    "payments": "Payments"
+    "payments": "Payments",
+    "hanzi": "汉字练习 — Hanzi practice"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -77,7 +78,8 @@
     "backToSignIn": "Back to sign in",
     "pendingTitle": "Your account is pending approval",
     "pendingMessage": "You requested to join as {{role}}. An admin needs to approve your account before you can continue — check back soon.",
-    "nameManagedByAdmin": "Your name is managed by your administrator — contact them to change it."
+    "nameManagedByAdmin": "Your name is managed by your administrator — contact them to change it.",
+    "emailOrCode": "Email or student code"
   },
   "common": {
     "add": "Add",
@@ -471,7 +473,9 @@
     "myCourses": "My courses",
     "myStudents": "My students",
     "unpaidThisMonth": "Unpaid this month",
-    "paymentStatus": "This month's payment"
+    "paymentStatus": "This month's payment",
+    "hanziToReview": "Hanzi work to review",
+    "hanziOpen": "Hanzi assignments to do"
   },
   "gradebook": {
     "title": "Gradebook",
@@ -539,5 +543,275 @@
     "reminderSent": "Reminder sent",
     "sendBulkReminder": "Send reminder to all unpaid ({{count}})",
     "bulkReminderSent": "Sent reminder to {{count}} student(s)."
+  },
+  "hanzi": {
+    "title": "Hanzi practice",
+    "subtitle": "Character writing, pinyin, translation and dictation exercises — shared by QR code, checked automatically, reviewed by you.",
+    "tabs": {
+      "assignments": "Assignments",
+      "review": "To review",
+      "words": "Word base",
+      "stats": "Statistics"
+    },
+    "common": {
+      "loadError": "Couldn't load this data. If the Hanzi module was just added, make sure the new firestore.rules have been published.",
+      "notFound": "Not found."
+    },
+    "types": {
+      "writing": "Hanzi writing",
+      "hanzi_input": "Type the hanzi",
+      "pinyin": "Pinyin",
+      "translation": "Translation",
+      "dictation": "Dictation"
+    },
+    "typeHelp": {
+      "writing": "Student sees pinyin + meaning and draws the character; HanziWriter checks stroke order.",
+      "hanzi_input": "Student sees pinyin + meaning and types the characters with a Chinese keyboard.",
+      "pinyin": "Student sees the hanzi + meaning and types the pinyin (tone marks or numbers).",
+      "translation": "Student sees the hanzi + pinyin and types the Uzbek meaning.",
+      "dictation": "Student hears the word (device text-to-speech) and types the hanzi."
+    },
+    "grid": {
+      "mi": "米字格 (mi grid)",
+      "tian": "田字格 (tian grid)"
+    },
+    "status": {
+      "not_started": "Not submitted",
+      "draft": "Not submitted",
+      "submitted": "Submitted",
+      "in_review": "In review",
+      "needs_revision": "Needs revision",
+      "reviewed": "Reviewed"
+    },
+    "assignmentStatus": {
+      "draft": "Draft",
+      "published": "Published",
+      "closed": "Closed"
+    },
+    "verdict": {
+      "correct": "Correct",
+      "incorrect": "Incorrect",
+      "unanswered": "Teacher check"
+    },
+    "fields": {
+      "hanzi": "Hanzi",
+      "pinyin": "Pinyin",
+      "translation": "Uzbek translation",
+      "altTranslations": "Other accepted translations",
+      "altPinyin": "Other accepted pinyin",
+      "tags": "Tags"
+    },
+    "words": {
+      "intro": "One vocabulary base for all teachers. Everyone can use every word; only the author (or an admin) can edit it.",
+      "new": "New word",
+      "edit": "Edit word",
+      "created": "Word added",
+      "updated": "Word updated",
+      "deleted": "Word deleted",
+      "deleteTitle": "Delete word?",
+      "deleteMessage": "\"{{hanzi}}\" will be removed from the word base. Existing assignments keep their copy.",
+      "empty": "No words match.",
+      "count": "Showing {{count}} of {{total}} words",
+      "searchPlaceholder": "汉字, pinyin or meaning",
+      "mineOnly": "Only my words",
+      "owner": "Added by",
+      "allLevels": "All",
+      "hskFilter": "HSK level",
+      "strokeOrder": "Stroke order",
+      "addStarter": "Add HSK 1 starter words",
+      "nothingNew": "All of these words are already in the base.",
+      "imported": "Words added: {{count}}",
+      "importValid": "{{count}} rows are valid ({{dup}} already exist and will be skipped).",
+      "onlyHanzi": "Only Chinese characters, please.",
+      "translationPlaceholder": "e.g. salom; assalomu alaykum",
+      "separatorHint": "Separate several values with \";\". Tone numbers (ni3 hao3) are converted to tone marks automatically."
+    },
+    "assignments": {
+      "new": "New assignment",
+      "empty": "No assignments yet — create one from your word base.",
+      "items": "Items: {{count}}",
+      "noDeadline": "No deadline",
+      "open": "Open",
+      "sentOf": "{{sent}} of {{total}} submitted",
+      "toReview": "to review: {{count}}",
+      "reviewedCount": "reviewed: {{count}}",
+      "published": "Published to {{count}} students",
+      "publishedShort": "Published",
+      "deleted": "Assignment deleted",
+      "deleteTitle": "Delete assignment?",
+      "deleteMessage": "\"{{title}}\" and its items will be deleted. Student submissions are kept.",
+      "draftNote": "This is a draft — students can't see it yet. Publish it to get the QR code and link.",
+      "students": "Students",
+      "noTargets": "No students are assigned.",
+      "noTargetsDraft": "Students are attached when you publish.",
+      "refreshTargets": "Add new group members",
+      "refreshed": "Student list updated",
+      "closed": "Assignment closed",
+      "reopen": "Reopen",
+      "reopened": "Assignment reopened",
+      "itemsList": "Items and answers"
+    },
+    "builder": {
+      "newTitle": "New Hanzi assignment",
+      "editTitle": "Edit Hanzi assignment",
+      "saveDraft": "Save draft",
+      "saved": "Saved",
+      "basics": "Basics",
+      "course": "Course",
+      "titleField": "Title",
+      "titlePlaceholder": "e.g. HSK 1 · Lesson 3",
+      "instructions": "Instructions (optional)",
+      "audience": "Who gets it",
+      "noGroups": "This course has no groups.",
+      "pickStudents": "Only selected students (otherwise the whole group)",
+      "noMembers": "No students in the selected groups.",
+      "words": "Words",
+      "noWordsYet": "The word base is empty — add words or the HSK 1 starter set first.",
+      "missingWords": "{{count}} previously chosen words no longer exist in the base.",
+      "tooManyWords": "At most {{max}} words per assignment.",
+      "exercises": "Exercises and settings",
+      "itemCount": "Total items: {{count}}",
+      "dueAt": "Deadline (optional)",
+      "maxScore": "Max score",
+      "maxAttempts": "Attempts allowed",
+      "grid": "Writing grid",
+      "tolerance": "Stroke mistakes allowed per character",
+      "allowHints": "Allow stroke hints and the stroke-order animation",
+      "allowHintsHelp": "Shows the outline/animation of the character — reveals the answer, so turn it off for tests.",
+      "requireTones": "Pinyin must include tones",
+      "requireTonesHelp": "When off, \"ni hao\" counts as correct for nǐ hǎo.",
+      "lockedNote": "This assignment is published: its words, exercise types and grading settings are locked so existing answers stay valid. You can still change title, instructions, deadline, score and attempts.",
+      "noCourses": "You need a course (with a group) before creating Hanzi assignments."
+    },
+    "qr": {
+      "title": "QR code for students",
+      "help": "Students scan it with the phone camera, sign in, and the assignment opens. Only students it's assigned to can see it.",
+      "downloadPng": "Download PNG",
+      "copyLink": "Copy link",
+      "copied": "Link copied",
+      "open": "Open",
+      "alt": "QR code for {{title}}"
+    },
+    "review": {
+      "auto": "Automatic",
+      "final": "Final score",
+      "check": "Review",
+      "view": "View",
+      "showAll": "Show already reviewed too",
+      "queueEmpty": "Nothing waiting for review.",
+      "expected": "Expected",
+      "accepted": "accepted",
+      "answer": "Answer",
+      "noAnswer": "No answer",
+      "unfinished": "unfinished",
+      "freehand": "free-hand",
+      "notChecked": "not checked yet",
+      "override": "Your verdict",
+      "opt": {
+        "auto": "Auto",
+        "correct": "Correct",
+        "incorrect": "Incorrect"
+      },
+      "comment": "Comment / correction",
+      "commentPlaceholder": "e.g. 3rd stroke goes left to right",
+      "suggested": "With your corrections",
+      "useSuggested": "use",
+      "byServer": "by server",
+      "byTeacher": "in teacher's browser",
+      "sendBack": "Needs revision",
+      "markReviewed": "Mark reviewed",
+      "saved": "Review saved",
+      "sentBack": "Sent back for revision"
+    },
+    "stats": {
+      "allCourses": "All courses",
+      "allGroups": "All groups",
+      "assignments": "Published assignments",
+      "completion": "Completion",
+      "sentOfExpected": "Submitted / expected",
+      "unreviewed": "Waiting for review",
+      "avg": "Average score",
+      "avgNote": "Average uses the teacher's final score where given, otherwise the automatic score.",
+      "empty": "No published assignments match this filter.",
+      "mostMissed": "Most-missed words",
+      "noMistakes": "No mistakes recorded yet.",
+      "byGroup": "By group",
+      "byAssignment": "By assignment",
+      "byStudent": "By student",
+      "students": "Students",
+      "sent": "Submitted",
+      "reviewed": "Reviewed",
+      "assigned": "Assigned"
+    },
+    "csv": {
+      "student": "Student",
+      "group": "Group",
+      "status": "Status",
+      "attempts": "Attempts",
+      "autoScore": "Automatic score",
+      "teacherScore": "Teacher score",
+      "maxScore": "Max",
+      "submittedAt": "Submitted at",
+      "late": "Late",
+      "feedback": "Feedback"
+    },
+    "student": {
+      "subtitle": "Assignments from your teachers. Open one from here or by scanning its QR code.",
+      "empty": "No Hanzi assignments for you yet.",
+      "noAccess": "This assignment isn't assigned to you (or it was removed).",
+      "backToList": "Back to my assignments"
+    },
+    "work": {
+      "attemptsLeft": "attempts left: {{count}} of {{max}}",
+      "lateAllowed": "late submissions accepted",
+      "offline": "You're offline. Your answers are saved on this device and will be sent automatically when the connection returns.",
+      "restored": "Unsent answers were restored from this device.",
+      "dictationPrompt": "Listen and write the characters",
+      "listen": "Listen",
+      "listenSlow": "Slower",
+      "noVoice": "This device has no Chinese voice installed — the audio may not play. Ask your teacher, or try another browser/phone.",
+      "imeHint": "Use a Chinese (pinyin) keyboard on your phone or computer.",
+      "translationPlaceholder": "Meaning in Uzbek",
+      "progress": "Answered {{done}} / {{total}}",
+      "save": {
+        "idle": "",
+        "saving": "saving…",
+        "saved": "saved",
+        "queued": "saved on device (offline)",
+        "error": "not saved — retrying on next change"
+      },
+      "submit": "Submit",
+      "confirmTitle": "Submit your answers?",
+      "confirmMessage": "Answered {{done}} of {{total}}. Attempts left after this: {{left}}.",
+      "submitted": "Submitted!",
+      "submitQueued": "You're offline — the submission will be sent automatically once you're back online.",
+      "submitFailed": "Couldn't submit. The deadline may have passed or no attempts are left.",
+      "lateSubmitFailed": "Your offline submission was rejected (deadline or attempts). Please check the assignment.",
+      "autoResult": "Automatic result",
+      "waitTeacher": "your teacher will confirm the final score.",
+      "waitAuto": "Submitted. The result appears after the automatic check / your teacher's review.",
+      "retry": "Try again",
+      "retryHelp": "Withdraws this submission so you can improve it (attempts left: {{count}}).",
+      "reviewedTitle": "Reviewed by your teacher",
+      "revisionTitle": "Your teacher asked you to revise this",
+      "teacherComment": "Teacher",
+      "noItems": "This assignment has no items."
+    },
+    "writing": {
+      "drawHint": "Draw stroke by stroke",
+      "restart": "Write again",
+      "animate": "Show stroke order",
+      "mistakes": "mistakes: {{count}}",
+      "dataUnavailable": "Stroke data for this character couldn't be loaded (offline?). Use free-hand writing.",
+      "useFree": "Switch to free-hand writing",
+      "useChecker": "Switch back to stroke checking",
+      "freeNote": "Free-hand writing isn't checked automatically — your teacher looks at the picture.",
+      "freeCanvas": "Free-hand writing area",
+      "undo": "Undo",
+      "clear": "Clear"
+    },
+    "login": {
+      "banner": "Sign in to open the Hanzi assignment from the QR code."
+    }
   }
 }
