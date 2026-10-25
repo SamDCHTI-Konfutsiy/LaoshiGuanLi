@@ -1,0 +1,72 @@
+import type { HanziWordInput } from '@/features/hanzi/words-service';
+
+/**
+ * A small HSK 1 starter set so a new school can try the module straight
+ * away. Teachers add/import the rest (CSV) — this list is only offered
+ * from the word base page and skips words that already exist.
+ * Translations: multiple accepted answers are separated with ";".
+ */
+const RAW: [hanzi: string, pinyin: string, translation: string][] = [
+  ['你好', 'nǐ hǎo', 'salom'],
+  ['谢谢', 'xièxie', 'rahmat'],
+  ['再见', 'zàijiàn', "xayr; ko'rishguncha"],
+  ['对不起', 'duìbuqǐ', 'kechirasiz; uzr'],
+  ['没关系', 'méi guānxi', "hechqisi yo'q"],
+  ['我', 'wǒ', 'men'],
+  ['你', 'nǐ', 'sen'],
+  ['他', 'tā', 'u (erkak)'],
+  ['她', 'tā', 'u (ayol)'],
+  ['我们', 'wǒmen', 'biz'],
+  ['人', 'rén', 'odam; kishi'],
+  ['老师', 'lǎoshī', "o'qituvchi; ustoz"],
+  ['学生', 'xuésheng', "talaba; o'quvchi"],
+  ['朋友', 'péngyou', "do'st"],
+  ['爸爸', 'bàba', 'ota; dada'],
+  ['妈妈', 'māma', 'ona; oyi'],
+  ['中国', 'Zhōngguó', 'Xitoy'],
+  ['汉语', 'Hànyǔ', 'xitoy tili'],
+  ['名字', 'míngzi', 'ism'],
+  ['什么', 'shénme', 'nima'],
+  ['谁', 'shéi', 'kim'],
+  ['大', 'dà', 'katta'],
+  ['小', 'xiǎo', 'kichik'],
+  ['好', 'hǎo', 'yaxshi'],
+  ['水', 'shuǐ', 'suv'],
+  ['茶', 'chá', 'choy'],
+  ['米饭', 'mǐfàn', 'guruch (pishirilgan); guruch'],
+  ['吃', 'chī', 'yemoq'],
+  ['喝', 'hē', 'ichmoq'],
+  ['看', 'kàn', "ko'rmoq; qaramoq"],
+  ['说', 'shuō', 'gapirmoq; aytmoq'],
+  ['学习', 'xuéxí', "o'qimoq; o'rganmoq"],
+  ['喜欢', 'xǐhuan', 'yoqtirmoq'],
+  ['去', 'qù', 'bormoq'],
+  ['来', 'lái', 'kelmoq'],
+  ['家', 'jiā', 'uy; oila'],
+  ['书', 'shū', 'kitob'],
+  ['猫', 'māo', 'mushuk'],
+  ['狗', 'gǒu', 'it'],
+  ['今天', 'jīntiān', 'bugun'],
+  ['明天', 'míngtiān', 'ertaga'],
+  ['昨天', 'zuótiān', 'kecha'],
+  ['一', 'yī', 'bir'],
+  ['二', 'èr', 'ikki'],
+  ['三', 'sān', 'uch'],
+  ['四', 'sì', "to'rt"],
+  ['五', 'wǔ', 'besh'],
+  ['六', 'liù', 'olti'],
+  ['七', 'qī', 'yetti'],
+  ['八', 'bā', 'sakkiz'],
+  ['九', 'jiǔ', "to'qqiz"],
+  ['十', 'shí', "o'n"],
+];
+
+export const HSK1_STARTER_WORDS: HanziWordInput[] = RAW.map(([hanzi, pinyin, translation]) => ({
+  hanzi,
+  pinyin,
+  translation,
+  altPinyin: [],
+  altTranslations: [],
+  hsk: 1,
+  tags: ['starter'],
+}));

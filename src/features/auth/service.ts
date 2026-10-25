@@ -85,8 +85,24 @@ export async function updateOwnProfile(
   await updateDoc(doc(usersCol, uid), updates);
 }
 
-export async function signIn(email: string, password: string): Promise<void> {
-  await signInWithEmailAndPassword(auth, email, password);
+/**
+ * Students can sign in with a short login code instead of an e-mail
+ * address (handy on a phone after scanning a Hanzi QR code). A code is just
+ * the local part of a synthetic e-mail address that an admin gave the
+ * account when creating it — e.g. code "s1024" → "s1024@student.laoshi.local"
+ * (domain configurable via VITE_STUDENT_LOGIN_DOMAIN). It is still a normal
+ * Firebase Email/Password account with a password, so security is
+ * unchanged; there is deliberately no password-less "type your name" login.
+ */
+export const STUDENT_LOGIN_DOMAIN: string = import.meta.env.VITE_STUDENT_LOGIN_DOMAIN || 'student.laoshi.local';
+
+export function resolveLoginEmail(identifier: string): string {
+  const value = identifier.trim();
+  return value.includes('@') ? value : `${value.toLowerCase()}@${STUDENT_LOGIN_DOMAIN}`;
+}
+
+export async function signIn(emailOrCode: string, password: string): Promise<void> {
+  await signInWithEmailAndPassword(auth, resolveLoginEmail(emailOrCode), password);
 }
 
 export async function signOutUser(): Promise<void> {

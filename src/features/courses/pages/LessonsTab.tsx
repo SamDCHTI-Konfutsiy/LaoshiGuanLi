@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -34,7 +34,9 @@ export function LessonsTab({
   classrooms: { id: string; name: string }[];
 }) {
   const { t, i18n } = useTranslation();
-  const lQuery = lessonsQuery(courseId);
+  // Memoised: a fresh query object every render made useCollection
+  // re-subscribe on every render (an endless re-render/re-read loop).
+  const lQuery = useMemo(() => lessonsQuery(courseId), [courseId]);
   const { data: lessons, loading } = useCollection(lQuery);
 
   const [editing, setEditing] = useState<WithId<Lesson> | 'new' | null>(null);

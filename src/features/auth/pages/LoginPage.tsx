@@ -19,7 +19,10 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
 
-  if (status === 'signed-in' || status === 'pending') return <Navigate to="/" replace />;
+  const fromPath = (location.state as { from?: string } | null)?.from ?? '';
+  const openingHanziTask = fromPath.startsWith('/hanzi/');
+
+  if (status === 'signed-in' || status === 'pending') return <Navigate to={fromPath || '/'} replace />;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -110,12 +113,21 @@ export function LoginPage() {
       <form onSubmit={(e) => void handleSubmit(e)} className="w-full max-w-sm rounded-xl border border-border bg-surface-raised p-6">
         <h1 className="font-display text-xl font-semibold">{t('auth.loginTitle')}</h1>
         <p className="mt-1 text-sm text-text-muted">{t('auth.loginSubtitle')}</p>
+        {openingHanziTask && (
+          <p className="mt-3 rounded-lg border border-steel-500/40 bg-steel-50 px-3 py-2 text-sm text-steel-600 dark:bg-surface dark:text-steel-300">
+            <span lang="zh" className="font-kai">汉字</span> {t('hanzi.login.banner')}
+          </p>
+        )}
 
         <div className="mt-6 flex flex-col gap-4">
           <TextField
-            label={t('auth.email')}
-            type="email"
-            autoComplete="email"
+            label={t('auth.emailOrCode')}
+            type="text"
+            inputMode="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            autoComplete="username"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
