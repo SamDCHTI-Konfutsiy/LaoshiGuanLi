@@ -56,6 +56,20 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff2,png,svg}'],
         navigateFallbackDenylist: [/^\/__/],
+        // Hanzi module: the HanziWriter script and its stroke data (one small
+        // JSON per character), both from jsDelivr. Cache-first so anything
+        // loaded once keeps working offline in the classroom.
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/hanzi-writer(-data)?@/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'hanzi-writer-data',
+              expiration: { maxEntries: 4000, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],

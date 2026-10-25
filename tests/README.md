@@ -1,7 +1,7 @@
 # Firestore rules tests
 
 These test the security rules directly, against a local emulator — not
-your real Firestore data. Five suites cover the invariants that matter
+your real Firestore data. Six suites cover the invariants that matter
 most if they ever broke silently:
 
 - `quiz-keys.test.ts` — a student can never read a quiz's answer key,
@@ -14,6 +14,11 @@ most if they ever broke silently:
   fake someone else's, only admin can read the log.
 - `manual-grades-privacy.test.ts` — a student sees their own grade,
   never a classmate's.
+- `hanzi-practice.test.ts` — Hanzi module: a student only sees
+  assignments they're targeted by (never drafts, never answer keys),
+  can only write their own answers within deadline/attempt limits, and
+  can never touch the teacher's score; a teacher can review but never
+  edit a student's answers.
 
 ## Running them
 
@@ -29,7 +34,7 @@ npm install
 npm run test:rules
 ```
 
-This starts the Firestore emulator, runs all five suites against it,
+This starts the Firestore emulator, runs all six suites against it,
 and shuts the emulator down afterward — nothing touches your real
 Firebase project.
 
